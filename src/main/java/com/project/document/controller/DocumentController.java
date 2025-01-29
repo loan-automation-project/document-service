@@ -1,8 +1,11 @@
 package com.project.document.controller;
 
+import java.io.IOException;
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,35 +24,29 @@ public class DocumentController {
     private S3Service s3Service;
 
     @PostMapping("/upload")
-    public String uploadDocument(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<String> uploadFile(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("name") String name,
+            @RequestParam("type") String type,
+            @RequestParam("loanId") Long loanId) {
+
         try {
-            String fileName = file.getOriginalFilename();
-            byte[] fileBytes = file.getBytes();
-            return s3Service.uploadFile(fileName, fileBytes);
-        } catch (Exception e) {
-            return "Failed to upload file: " + e.getMessage();
+            String key = loanId + "/" + file.getOriginalFilename(); 
+            String message = s3Service.uploadFile(key, file.getBytes(), name, type, loanId);
+            return ResponseEntity.ok(message);
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("File upload failed: " + e.getMessage());
         }
     }
     
-    @GetMapping("/download/{fileName}")
-    public ResponseEntity<ByteArrayResource> downloadDocument(@PathVariable String fileName) {
-        try {
-            byte[] fileBytes = s3Service.downloadFile(fileName);
+    @GetMapping("/download/{loanId}")
+    public ResponseEntity<byte[]> downloadFilesAsZip(@PathVariable Integer loanId) {
+        byte[] zipData = s3Service.downloadFiles(loanId);
 
-            // Create a ByteArrayResource from the file bytes
-            ByteArrayResource resource = new ByteArrayResource(fileBytes);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        headers.setContentDisposition(ContentDisposition.attachment().filename("loan_" + loanId + "_documents.zip").build());
 
-            // Set headers for the response
-            HttpHeaders headers = new HttpHeaders();
-            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
-
-            return ResponseEntity.ok()
-                    .headers(headers)
-                    .contentLength(fileBytes.length)
-                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                    .body(resource);
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(null);
-        }
+        return new ResponseEntity<>(zipData, headers, HttpStatus.OK);
     }
 }
