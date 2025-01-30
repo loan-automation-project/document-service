@@ -24,7 +24,7 @@ public class DocumentEntity {
     private Long documentId;
 
     @Column(name = "loan_application_id", nullable = false)
-    private Long loanApplicationId; 
+    private Long loanId; 
     
     @Column(name = "document_type", nullable = false)
     private String documentType;
@@ -33,6 +33,61 @@ public class DocumentEntity {
     private String documentName; 
 
     @Column(name = "document_status", nullable = false)
-    private String documentStatus; 
+    private String documentStatus;
+    
+    @Column(name = "S3key" , nullable = false)
+    private String S3key;
+    
+    
+
+	public String getS3key() {
+		return S3key;
+	}
+
+	public void setS3key(String s3key) {
+		S3key = s3key;
+	}
+
+	public Long getDocumentId() {
+		return documentId;
+	}
+
+	public void setDocumentId(Long documentId) {
+		this.documentId = documentId;
+	}
+
+	public Long getLoanId() {
+		return loanId;
+	}
+
+	public void setLoanId(Long loanId) {
+		this.loanId = loanId;
+	}
+
+	public String getDocumentType() {
+		return documentType;
+	}
+
+	public void setDocumentType(String documentType) {
+		this.documentType = documentType;
+	}
+
+	public String getDocumentName() {
+		return documentName;
+	}
+
+	public void setDocumentName(String documentName) {
+		this.documentName = documentName;
+	}
+
+	public String getDocumentStatus() {
+		return documentStatus;
+	}
+
+	public void setDocumentStatus(String documentStatus) {
+		this.documentStatus = documentStatus;
+	} 
+    
+    
 }
 
