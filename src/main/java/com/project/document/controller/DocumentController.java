@@ -9,7 +9,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,28 +18,33 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.project.document.service.S3Service;
+import com.project.document.client.LoanApplicationClient;
+import com.project.document.dto.LoanApplicationDTO;
+import com.project.document.service.DocumentService;
 
 @RestController
 @RequestMapping("/documents")
-@CrossOrigin(origins = "http://localhost:5173")
 public class DocumentController {
 
     @Autowired
     private S3Service s3Service;
+    
+    @Autowired
+    private LoanApplicationClient loanApplicationClient;
+
+    @Autowired
+    private DocumentService documentService;
 
     @PostMapping("/upload")
     public ResponseEntity<String> uploadFile(
             @RequestParam("file") MultipartFile file,
-            @RequestParam("name") String name,
-            @RequestParam("type") String type,
-            @RequestParam("loanId") Long loanId) {
-
+            @RequestParam("type") String documentType) {
         try {
-            String key = loanId + "/" + file.getOriginalFilename(); 
-            String message = s3Service.uploadFile(key, file.getBytes(), name, type, loanId);
+            String message = documentService.uploadDocument(file, documentType);
             return ResponseEntity.ok(message);
-        } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("File upload failed: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("File upload failed: " + e.getMessage());
         }
     }
     
